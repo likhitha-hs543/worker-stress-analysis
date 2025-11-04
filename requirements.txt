@@ -18,7 +18,7 @@ retina-face==0.0.13
 sounddevice==0.4.6
 librosa==0.10.1
 python-speech-features==0.6
-pyaudio==0.2.13
+scipy==1.11.4
 
 # Web Framework
 flask==3.0.0
