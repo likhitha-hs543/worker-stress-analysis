@@ -207,10 +207,7 @@ class WorkerStressAnalysis:
         print("\nCurrent Emotion Details:")
         print(f"  Face Emotion: {self.current_face_emotion} (conf: {self.current_face_confidence:.2f})")
         print(f"  Speech Emotion: {self.current_speech_emotion} (conf: {self.current_speech_confidence:.2f})")
-        print("="*50 + f"\nCurrent Face Emotion: {self.current_face_emotion} ({self.current_face_confidence:.2f})")
-
-        print(f"Current Speech Emotion: {self.current_speech_emotion} ({self.current_speech_confidence:.2f})")
-        print("==================================\n")
+        print("="*50 + "\n")
     
     def stop_system(self):
         """Stop the stress analysis system"""

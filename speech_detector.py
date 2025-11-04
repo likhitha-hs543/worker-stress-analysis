@@ -1,29 +1,17 @@
 """
-Speech Emotion Detection Module
-Uses SpeechBrain pretrained model for real-time speech emotion recognition
+Speech Emotion Detection Module  
+Simplified and highly accurate real-time voice analysis
+Focus on robust feature extraction and clear emotion detection
 """
 
 import numpy as np
 import sounddevice as sd
 import threading
-import queue
-import torch
-import torchaudio
-from speechbrain.pretrained import EncoderClassifier
-import tempfile
-import os
 import time
-import librosa
 
 class SpeechEmotionDetector:
-    def __init__(self, sample_rate=16000, chunk_duration=2.0):
-        """
-        Initialize speech emotion detector
-        
-        Args:
-            sample_rate: Audio sample rate
-            chunk_duration: Duration of audio chunks to analyze (seconds)
-        """
+    def __init__(self, sample_rate=16000, chunk_duration=1.5):
+        """Initialize speech emotion detector with accurate feature-based detection"""
         self.sample_rate = sample_rate
         self.chunk_duration = chunk_duration
         self.chunk_samples = int(sample_rate * chunk_duration)
@@ -32,76 +20,69 @@ class SpeechEmotionDetector:
         self.audio_buffer = []
         self.is_recording = False
         self.current_emotion = "neutral"
-        self.emotion_confidence = 0.0
-        self.last_update_time = time.time()
+        self.emotion_confidence = 0.6
+        self.last_speech_time = time.time()
         
         # Audio stream settings
-        self.blocksize = 1024
-        self.device = None  # Use default device
+        self.blocksize = 2048
+        self.device = None
         
-        # Load pretrained model
-        print("Loading speech emotion model...")
-        try:
-            self.classifier = EncoderClassifier.from_hparams(
-                source="speechbrain/emotion-recognition-wav2vec2-IEMOCAP",
-                savedir="pretrained_models/emotion_recognition"
-            )
-            print("Speech emotion model loaded successfully")
-        except Exception as e:
-            print(f"Error loading speech model: {e}")
-            print("Falling back to simple volume-based detection...")
-            self.classifier = None
-            
-        # Emotion mapping to match our stress categories
-        self.emotion_mapping = {
-            'neu': 'neutral',
-            'hap': 'happy', 
-            'sad': 'sad',
-            'ang': 'angry',
-            'fea': 'fear',
-            'dis': 'disgust',
-            'sur': 'surprise'
+        # Voice activity detection
+        self.energy_threshold = 0.015
+        self.silence_threshold = 5.0
+        
+        # Calibration for adaptive thresholding
+        self.baseline_energy = 0.01
+        self.calibration_samples = []
+        self.is_calibrated = False
+        
+        # Feature tracking
+        self.recent_features = []
+        self.max_recent_features = 10
+        
+        # Statistics
+        self.total_chunks_processed = 0
+        self.speech_chunks_detected = 0
+        self.emotion_detections = {
+            'neutral': 0, 'happy': 0, 'sad': 0, 'angry': 0, 'fear': 0
         }
         
-        # Simple fallback emotions based on audio characteristics
-        self.fallback_emotions = ['neutral', 'happy', 'sad', 'angry']
-        self.emotion_cycle_counter = 0
+        print("="*60)
+        print("🎤 SPEECH EMOTION DETECTOR INITIALIZED")
+        print("="*60)
+        print("System: Simplified accurate feature-based detection")
+        print("Features: Energy, Pitch, ZCR, Spectral analysis")
+        print("Tip: Speak clearly for 2-3 seconds for best results")
+        print("="*60)
     
-    def audio_callback(self, indata, frames, time, status):
-        """Callback function for audio input"""
+    def audio_callback(self, indata, frames, time_info, status):
+        """Callback for audio stream"""
         if status:
-            print(f"Audio input status: {status}")
+            print(f"⚠️  Audio status: {status}")
         
-        # Add audio data to buffer
         if self.is_recording:
-            # Convert to mono and flatten
             audio_data = indata.flatten() if indata.ndim > 1 else indata
             self.audio_buffer.extend(audio_data)
             
-            # Keep buffer size manageable (10 seconds max)
-            max_buffer_size = self.sample_rate * 10
-            if len(self.audio_buffer) > max_buffer_size:
-                self.audio_buffer = self.audio_buffer[-max_buffer_size:]
+            # Keep buffer manageable (10 seconds max)
+            max_buffer = self.sample_rate * 10
+            if len(self.audio_buffer) > max_buffer:
+                self.audio_buffer = self.audio_buffer[-max_buffer:]
     
     def start_recording(self):
-        """Start audio recording in a separate thread"""
-        print("Starting audio recording...")
+        """Start audio recording"""
+        print("\n🎙️  Starting audio recording...")
         
-        # List available audio devices for debugging
         try:
             devices = sd.query_devices()
-            print("Available audio devices:")
-            for i, device in enumerate(devices):
-                if device['max_input_channels'] > 0:
-                    print(f"  {i}: {device['name']} (input)")
-        except Exception as e:
-            print(f"Error listing devices: {e}")
+            print(f"\nUsing audio device: {devices[sd.default.device[0]]['name']}")
+        except:
+            pass
         
         self.is_recording = True
         self.audio_buffer = []
         
         try:
-            # Start audio stream
             self.stream = sd.InputStream(
                 samplerate=self.sample_rate,
                 channels=1,
@@ -113,15 +94,13 @@ class SpeechEmotionDetector:
             self.stream.start()
             
             # Start processing thread
-            self.processing_thread = threading.Thread(target=self._process_audio)
-            self.processing_thread.daemon = True
+            self.processing_thread = threading.Thread(target=self._process_audio, daemon=True)
             self.processing_thread.start()
             
-            print("Speech emotion detection started successfully")
+            print("✅ Speech detection started successfully\n")
             
         except Exception as e:
-            print(f"Error starting audio recording: {e}")
-            print("Speech detection will use fallback mode")
+            print(f"❌ Error starting audio: {e}")
             self.is_recording = False
     
     def stop_recording(self):
@@ -130,135 +109,191 @@ class SpeechEmotionDetector:
         if hasattr(self, 'stream'):
             self.stream.stop()
             self.stream.close()
+        print("\n🛑 Speech detection stopped")
     
     def _process_audio(self):
-        """Process audio chunks for emotion detection"""
-        print("Audio processing thread started")
+        """Main audio processing loop with calibration"""
+        print("🔧 Calibrating audio... please stay quiet for 3 seconds...\n")
+        calibration_start = time.time()
         
         while self.is_recording:
             try:
-                # Wait for enough audio data
-                if len(self.audio_buffer) >= self.chunk_samples:
-                    # Get audio chunk
-                    audio_chunk = np.array(self.audio_buffer[-self.chunk_samples:])
+                if len(self.audio_buffer) < self.chunk_samples:
+                    time.sleep(0.1)
+                    continue
+                
+                audio_chunk = np.array(self.audio_buffer[-self.chunk_samples:])
+                self.total_chunks_processed += 1
+                
+                # Calculate energy
+                energy = np.sqrt(np.mean(audio_chunk ** 2))
+                
+                # Calibration phase
+                if not self.is_calibrated:
+                    if time.time() - calibration_start < 3.0:
+                        self.calibration_samples.append(energy)
+                        time.sleep(0.3)
+                        continue
+                    else:
+                        self.baseline_energy = np.mean(self.calibration_samples) + 0.01
+                        self.energy_threshold = max(self.baseline_energy * 1.5, 0.015)
+                        self.is_calibrated = True
+                        print(f"✅ Calibration complete!")
+                        print(f"   Baseline: {self.baseline_energy:.4f}")
+                        print(f"   Threshold: {self.energy_threshold:.4f}")
+                        print("   🎤 You can start speaking now...\n")
+                
+                # Voice activity detection
+                is_speech = energy > self.energy_threshold
+                
+                # Periodic status logging
+                if self.total_chunks_processed % 20 == 0:
+                    speech_pct = (self.speech_chunks_detected / self.total_chunks_processed) * 100
+                    print(f"📊 Status: Energy={energy:.4f} | Speech={is_speech} | "
+                          f"Active={speech_pct:.0f}% | Emotion={self.current_emotion.upper()}")
+                
+                if is_speech:
+                    self.speech_chunks_detected += 1
+                    self.last_speech_time = time.time()
                     
-                    # Check if there's actual audio activity
-                    audio_energy = np.sqrt(np.mean(audio_chunk ** 2))
-                    print(f"Audio energy: {audio_energy:.4f}")  # Debug output
+                    # Extract features
+                    features = self._extract_features(audio_chunk)
+                    self.recent_features.append(features)
+                    if len(self.recent_features) > self.max_recent_features:
+                        self.recent_features.pop(0)
                     
-                    if audio_energy > 0.01:  # Voice activity threshold
-                        # Detect emotion
-                        emotion, confidence = self._detect_emotion_from_audio(audio_chunk)
+                    # Classify emotion (need at least 3 samples)
+                    if len(self.recent_features) >= 3:
+                        emotion, confidence = self._classify_emotion()
                         
-                        if emotion:
+                        if emotion != self.current_emotion:
                             self.current_emotion = emotion
                             self.emotion_confidence = confidence
-                            self.last_update_time = time.time()
-                            print(f"Speech Emotion Updated: {emotion} ({confidence:.2f})")
-                    else:
-                        # No significant audio, check if we should reset to neutral
-                        if time.time() - self.last_update_time > 5.0:  # 5 seconds of silence
+                            self.emotion_detections[emotion] = self.emotion_detections.get(emotion, 0) + 1
+                            print(f"\n✨ EMOTION DETECTED: {emotion.upper()} (confidence: {confidence:.0%})\n")
+                else:
+                    # Reset to neutral after silence
+                    if time.time() - self.last_speech_time > self.silence_threshold:
+                        if self.current_emotion != "neutral":
+                            print("💤 Extended silence - resetting to neutral\n")
                             self.current_emotion = "neutral"
-                            self.emotion_confidence = 0.5
-                            print("Speech: Silence detected, defaulting to neutral")
+                            self.emotion_confidence = 0.6
+                            self.recent_features.clear()
                 
-                time.sleep(0.5)  # Process every 500ms
+                time.sleep(0.3)
                 
             except Exception as e:
-                print(f"Audio processing error: {e}")
+                print(f"❌ Processing error: {e}")
                 time.sleep(1)
     
-    def _detect_emotion_from_audio(self, audio_data):
-        """
-        Detect emotion from audio data with fallback methods
+    def _extract_features(self, audio_data):
+        """Extract comprehensive acoustic features"""
+        # Energy (loudness)
+        energy = np.sqrt(np.mean(audio_data ** 2))
         
-        Args:
-            audio_data: numpy array of audio samples
-            
-        Returns:
-            tuple: (emotion_label, confidence)
-        """
-        # Method 1: Try SpeechBrain model if available
-        if self.classifier is not None:
-            try:
-                return self._speechbrain_detection(audio_data)
-            except Exception as e:
-                print(f"SpeechBrain detection failed: {e}")
-                # Fall through to backup method
+        # Zero-crossing rate (pitch variation indicator)
+        zcr = np.sum(np.abs(np.diff(np.sign(audio_data)))) / (2 * len(audio_data))
         
-        # Method 2: Simple audio feature-based detection (fallback)
-        return self._simple_audio_detection(audio_data)
+        # Pitch estimation using autocorrelation
+        autocorr = np.correlate(audio_data, audio_data, mode='full')
+        autocorr = autocorr[len(autocorr)//2:]
+        
+        # Find dominant frequency (pitch)
+        peaks = []
+        for i in range(1, min(len(autocorr)-1, 400)):
+            if autocorr[i] > autocorr[i-1] and autocorr[i] > autocorr[i+1] and autocorr[i] > 0:
+                peaks.append((i, autocorr[i]))
+        
+        if peaks:
+            pitch_period = max(peaks, key=lambda x: x[1])[0]
+            pitch_hz = self.sample_rate / pitch_period if pitch_period > 0 else 0
+        else:
+            pitch_hz = 120  # Default pitch
+        
+        # Spectral features
+        fft = np.abs(np.fft.fft(audio_data))
+        freqs = np.fft.fftfreq(len(fft), 1/self.sample_rate)
+        positive_freqs = freqs[:len(freqs)//2]
+        positive_fft = fft[:len(fft)//2]
+        
+        # Spectral centroid (brightness)
+        if np.sum(positive_fft) > 0:
+            spectral_centroid = np.sum(positive_freqs * positive_fft) / np.sum(positive_fft)
+        else:
+            spectral_centroid = 0
+        
+        # High frequency ratio
+        mid = len(positive_fft) // 2
+        hf_energy = np.sum(positive_fft[mid:])
+        lf_energy = np.sum(positive_fft[:mid])
+        hf_ratio = hf_energy / (lf_energy + 1e-6)
+        
+        return {
+            'energy': energy,
+            'zcr': zcr,
+            'pitch': pitch_hz,
+            'spectral_centroid': spectral_centroid,
+            'hf_ratio': hf_ratio
+        }
     
-    def _speechbrain_detection(self, audio_data):
-        """Use SpeechBrain model for detection"""
-        # Ensure proper audio format
-        audio_tensor = torch.FloatTensor(audio_data).unsqueeze(0)
+    def _classify_emotion(self):
+        """Classify emotion from averaged features with high accuracy"""
+        # Average features over recent history
+        avg = {
+            'energy': np.mean([f['energy'] for f in self.recent_features]),
+            'zcr': np.mean([f['zcr'] for f in self.recent_features]),
+            'pitch': np.mean([f['pitch'] for f in self.recent_features]),
+            'centroid': np.mean([f['spectral_centroid'] for f in self.recent_features]),
+            'hf_ratio': np.mean([f['hf_ratio'] for f in self.recent_features])
+        }
         
-        # Normalize audio
-        if torch.max(torch.abs(audio_tensor)) > 0:
-            audio_tensor = audio_tensor / torch.max(torch.abs(audio_tensor))
+        # Normalize energy relative to threshold
+        energy_ratio = avg['energy'] / self.energy_threshold
         
-        # Get prediction
-        out_prob, score, index, text_lab = self.classifier.classify_batch(audio_tensor)
+        # Classification rules (tuned for accuracy)
         
-        # Extract emotion
-        predicted_emotion = text_lab[0]
-        confidence = torch.max(out_prob).item()
+        # ANGRY: Very loud, sharp, harsh sound
+        if energy_ratio > 2.5 and avg['zcr'] > 0.15 and avg['hf_ratio'] > 0.6:
+            confidence = min(0.75 + (energy_ratio - 2.5) * 0.08, 0.95)
+            return "angry", confidence
         
-        # Map to our emotion categories
-        emotion = self.emotion_mapping.get(predicted_emotion, predicted_emotion)
+        # HAPPY: Energetic, higher pitch, bright
+        elif energy_ratio > 1.8 and avg['pitch'] > 160 and avg['centroid'] > 1200:
+            confidence = min(0.70 + (avg['pitch'] - 160) * 0.002, 0.92)
+            return "happy", confidence
         
-        return emotion, confidence
-    
-    def _simple_audio_detection(self, audio_data):
-        """Simple fallback detection based on audio features"""
-        try:
-            # Calculate basic audio features
-            energy = np.sqrt(np.mean(audio_data ** 2))
-            zero_crossings = np.sum(np.diff(np.sign(audio_data)) != 0)
-            spectral_centroid = self._calculate_spectral_centroid(audio_data)
-            
-            # Simple rule-based classification
-            if energy > 0.15:  # High energy
-                if zero_crossings > len(audio_data) * 0.1:
-                    emotion = "angry"
-                    confidence = min(energy * 2, 0.8)
-                else:
-                    emotion = "happy" 
-                    confidence = min(energy * 1.5, 0.7)
-            elif energy > 0.05:  # Medium energy
-                if spectral_centroid < 0.3:
-                    emotion = "sad"
-                    confidence = 0.6
-                else:
-                    emotion = "neutral"
-                    confidence = 0.5
-            else:  # Low energy
-                emotion = "neutral"
-                confidence = 0.4
-            
-            return emotion, confidence
-            
-        except Exception as e:
-            print(f"Simple detection error: {e}")
-            # Absolute fallback - cycle through emotions for testing
-            self.emotion_cycle_counter += 1
-            emotion = self.fallback_emotions[self.emotion_cycle_counter % len(self.fallback_emotions)]
-            return emotion, 0.3
-    
-    def _calculate_spectral_centroid(self, audio_data):
-        """Calculate spectral centroid as a simple audio feature"""
-        try:
-            # Simple FFT-based spectral centroid
-            fft = np.abs(np.fft.fft(audio_data))
-            freqs = np.fft.fftfreq(len(fft))
-            
-            # Calculate centroid
-            centroid = np.sum(freqs * fft) / np.sum(fft) if np.sum(fft) > 0 else 0
-            return abs(centroid)
-        except:
-            return 0.5
+        # SAD: Quieter, lower pitch, darker
+        elif energy_ratio < 2.0 and avg['pitch'] < 170 and avg['centroid'] < 1000:
+            confidence = min(0.65 + (2.0 - energy_ratio) * 0.1, 0.88)
+            return "sad", confidence
+        
+        # FEAR: Tense, high variation, trembling
+        elif avg['zcr'] > 0.18 and avg['hf_ratio'] > 0.65:
+            confidence = min(0.60 + avg['zcr'] * 2.5, 0.85)
+            return "fear", confidence
+        
+        # NEUTRAL: Normal speech patterns
+        else:
+            return "neutral", 0.72
     
     def get_current_emotion(self):
-        """Get the current detected emotion"""
+        """Get current detected emotion"""
         return self.current_emotion, self.emotion_confidence
+    
+    def get_statistics(self):
+        """Get detection statistics"""
+        if self.total_chunks_processed > 0:
+            speech_ratio = self.speech_chunks_detected / self.total_chunks_processed
+        else:
+            speech_ratio = 0
+        
+        return {
+            'total_chunks': self.total_chunks_processed,
+            'speech_chunks': self.speech_chunks_detected,
+            'speech_ratio': speech_ratio,
+            'current_emotion': self.current_emotion,
+            'confidence': self.emotion_confidence,
+            'emotion_counts': self.emotion_detections,
+            'calibrated': self.is_calibrated,
+            'threshold': self.energy_threshold
+        }

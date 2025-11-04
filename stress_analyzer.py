@@ -1,39 +1,3 @@
-def _get_emotion_stress_score(self, emotion, confidence):
-        """
-        Convert emotion to stress score with more nuanced scoring
-        
-        Args:
-            emotion: emotion label
-            confidence: confidence score
-            
-        Returns:
-            float: stress score (0-1)
-        """
-        if not emotion or confidence < 0.2:  # Very low confidence threshold
-            return 0.3  # Default neutral stress
-        
-        # Enhanced emotion-to-stress mapping
-        emotion_stress_map = {
-            # High stress emotions
-            'angry': 0.9,
-            'fear': 0.85,
-            'sad': 0.75,
-            'disgust': 0.7,
-            
-            # Medium stress emotions
-            'surprise': 0.5,  # Can be positive or negative
-            
-            # Low stress emotions
-            'neutral': 0.3,
-            'happy': 0.1,
-        }
-        
-        base_score = emotion_stress_map.get(emotion, 0.4)
-        
-        # Apply confidence weighting
-        confidence_weighted_score = base_score * confidence + 0.3 * (1 - confidence)
-        
-        return min(max(confidence_weighted_score, 0.0), 1.0)
 """
 Stress Analysis Module
 Combines face and speech emotions to determine stress level
@@ -202,34 +166,6 @@ class StressAnalyzer:
         confidence_weighted_score = base_score * confidence + 0.3 * (1 - confidence)
         
         return min(max(confidence_weighted_score, 0.0), 1.0)
-        """
-        Convert emotion to stress score
-        
-        Args:
-            emotion: emotion label
-            confidence: confidence score
-            
-        Returns:
-            float: stress score (0-1)
-        """
-        if not emotion or confidence < 0.3:  # Low confidence threshold
-            return 0.0
-        
-        # High stress emotions
-        if emotion in self.stress_emotions:
-            return confidence * 1.0
-        
-        # Medium stress (surprise can indicate stress in work context)
-        elif emotion == 'surprise':
-            return confidence * 0.6
-        
-        # Low/no stress emotions
-        elif emotion in self.neutral_emotions:
-            return confidence * 0.1
-        
-        # Unknown emotion - neutral
-        else:
-            return 0.3
     
     def _apply_temporal_smoothing(self, current_score):
         """

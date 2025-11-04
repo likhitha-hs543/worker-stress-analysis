@@ -10,12 +10,28 @@ from fer import FER
 class FaceEmotionDetector:
     def __init__(self):
         """Initialize the face emotion detector"""
-        self.detector = FER(mtcnn=True)  # Using MTCNN for better face detection
+        print("Initializing Face Emotion Detector...")
+        
+        # Try MTCNN first, fallback to default if it fails
+        try:
+            self.detector = FER(mtcnn=True)
+            print("✅ Using MTCNN face detection (accurate but slower)")
+        except Exception as e:
+            print(f"⚠️  MTCNN failed, using default detector: {e}")
+            self.detector = FER(mtcnn=False)
+            print("✅ Using default face detection (faster)")
+        
         self.emotions = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
+        
+        # Keep track of last detection for smoothing
+        self.last_emotion = 'neutral'
+        self.last_confidence = 0.5
+        self.detection_count = 0
+        self.failed_detections = 0
         
     def detect_emotion(self, frame):
         """
-        Detect emotion from a video frame
+        Detect emotion from a video frame with enhanced preprocessing
         
         Args:
             frame: OpenCV image frame
@@ -24,10 +40,27 @@ class FaceEmotionDetector:
             tuple: (emotion_label, confidence, face_coordinates)
         """
         try:
-            # Detect emotions
-            result = self.detector.detect_emotions(frame)
+            self.detection_count += 1
             
-            if result:
+            # Preprocess frame for better detection
+            # Convert to RGB (FER expects RGB)
+            if len(frame.shape) == 3 and frame.shape[2] == 3:
+                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            else:
+                rgb_frame = frame
+            
+            # Enhance contrast for better detection
+            lab = cv2.cvtColor(rgb_frame, cv2.COLOR_RGB2LAB)
+            l, a, b = cv2.split(lab)
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+            l = clahe.apply(l)
+            enhanced_frame = cv2.merge([l, a, b])
+            enhanced_frame = cv2.cvtColor(enhanced_frame, cv2.COLOR_LAB2RGB)
+            
+            # Detect emotions
+            result = self.detector.detect_emotions(enhanced_frame)
+            
+            if result and len(result) > 0:
                 # Get the first face (most prominent)
                 face = result[0]
                 emotion_scores = face['emotions']
@@ -37,12 +70,35 @@ class FaceEmotionDetector:
                 dominant_emotion = max(emotion_scores, key=emotion_scores.get)
                 confidence = emotion_scores[dominant_emotion]
                 
-                return dominant_emotion, confidence, face_coords
+                # Only accept if confidence is above threshold (reduces noise)
+                if confidence > 0.3:
+                    self.last_emotion = dominant_emotion
+                    self.last_confidence = confidence
+                    self.failed_detections = 0
+                    
+                    # Log occasional detections
+                    if self.detection_count % 100 == 0:
+                        print(f"✅ Face detected: {dominant_emotion} ({confidence:.2%})")
+                    
+                    return dominant_emotion, confidence, face_coords
+                else:
+                    # Low confidence, use last known emotion
+                    self.failed_detections += 1
+                    return self.last_emotion, self.last_confidence, face_coords
             else:
+                # No face detected
+                self.failed_detections += 1
+                
+                # Log if detection is consistently failing
+                if self.failed_detections % 50 == 0:
+                    print(f"⚠️  No face detected for {self.failed_detections} frames. Check lighting and camera position.")
+                
                 return None, 0.0, None
                 
         except Exception as e:
-            print(f"Face detection error: {e}")
+            self.failed_detections += 1
+            if self.failed_detections % 20 == 0:
+                print(f"❌ Face detection error: {e}")
             return None, 0.0, None
     
     def draw_results(self, frame, emotion, confidence, face_coords, stress_level, stress_score):
