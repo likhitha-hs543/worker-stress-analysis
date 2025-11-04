@@ -712,36 +712,75 @@ def clear_old_data(self, days=7):  # Change 7 to desired days
 
 ## 📄 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)** - see the [LICENSE](LICENSE) file for details.
 
-**You are free to**:
-- ✅ Use commercially
-- ✅ Modify the code
-- ✅ Distribute
-- ✅ Use privately
+© 2025 Likhitha HS. All Rights Reserved.
 
-**Under the condition**:
-- ⚠️ Include the original license and copyright notice
+### **What You Can Do** ✅
+- 📖 **Study & Learn**: Use this project for learning and educational purposes
+- 🎓 **Academic Use**: Perfect for university projects, research papers, and thesis work
+- 🏠 **Personal Projects**: Use it for your personal stress monitoring needs
+- 🔧 **Modify & Improve**: Make changes and improvements for your own use
+- 📤 **Share**: Share the original or your modified version with others
+- 🤝 **Contribute**: Submit improvements back to this repository
+
+### **What You Need to Do** 📋
+- 👤 **Give Credit**: Mention "Created by Likhitha HS" when sharing
+- 🔗 **Link Back**: Include a link to this GitHub repository
+- 📝 **Same License**: Share any modifications under the same CC BY-NC-SA 4.0 license
+- 💬 **Indicate Changes**: Let others know if you modified the code
+
+### **What's Not Allowed** ⚠️
+- 💰 **Commercial Use**: Please don't sell this project or use it in paid products/services
+- 🏢 **Corporate Use**: Companies need to contact me for commercial licensing
+- 🚫 **Claiming Ownership**: Don't present this work as your own creation
+
+### **Need Commercial License?** 💼
+If you want to use this project commercially, I'm open to discussion! Feel free to reach out:
+- GitHub: [@likhitha-hs543](https://github.com/likhitha-hs543)
+- Let's talk about your use case and work something out 😊
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to:
+**Note**: This project is licensed under CC BY-NC-ND 4.0, which restricts derivative works. However, you can contribute improvements directly to this repository.
 
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/AmazingFeature`)
-3. **Commit your changes** (`git commit -m 'Add AmazingFeature'`)
-4. **Push to the branch** (`git push origin feature/AmazingFeature`)
-5. **Open a Pull Request**
+**How to contribute**:
 
-### **Areas for Contribution**
-- 🎯 Accuracy improvements
-- 🐛 Bug fixes
-- � Documentation enhancements
-- 🎨 UI/UX improvements
-- 🌐 Multi-language support
-- 🧪 Test coverage
+1. **Open an Issue** first to discuss proposed changes
+2. **Wait for approval** from the maintainer
+3. **Fork the repository** (for approved contributions only)
+4. **Create a feature branch** (`git checkout -b feature/ApprovedFeature`)
+5. **Commit your changes** (`git commit -m 'Add ApprovedFeature'`)
+6. **Push to the branch** (`git push origin feature/ApprovedFeature`)
+7. **Open a Pull Request** with detailed description
+
+### **Acceptable Contributions**
+- 🐛 Bug fixes and error corrections
+- 📚 Documentation improvements and translations
+- 🧪 Test coverage and quality assurance
+- ⚡ Performance optimizations
+- 🔒 Security enhancements
+- 🎯 Accuracy improvements (better models, preprocessing techniques)
+- 💡 Code refactoring and clean code practices
+- 🎨 UI/UX improvements and design enhancements
+- 🌐 Multi-language support and internationalization
+- 📊 Data visualization enhancements
+- 🔧 Configuration options and customization features
+- 🎥 Better video processing algorithms
+- 🎤 Improved audio/speech detection methods
+- 📱 Mobile responsiveness improvements
+- ♿ Accessibility features
+- 🚀 Deployment guides and Docker support
+
+### **Requires Permission**
+- � Major feature additions
+- �🎨 Significant UI/UX changes
+- 🏗️ Architectural modifications
+- 🌐 Third-party integrations
+
+**By contributing, you agree that your contributions will be licensed under the same CC BY-NC-ND 4.0 license and that Likhitha HS retains all rights to the project.**
 
 ---
 

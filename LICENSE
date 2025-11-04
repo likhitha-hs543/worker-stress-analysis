@@ -1,21 +1,58 @@
-MIT License
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
 
-Copyright (c) 2025 Likhitha HS
+Copyright (c) 2025 Likhitha HS. All Rights Reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+===============================================================================
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+TERMS AND CONDITIONS
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+You are free to:
+  - View, study, and learn from the source code
+  - Use the software for personal, educational, or research purposes
+  - Share and redistribute the code with proper attribution
+  - Modify, adapt, and build upon this work for non-commercial purposes
+
+Under the following conditions:
+
+  Attribution (BY):
+    - You must give appropriate credit to Likhitha HS
+    - Provide a link to this license
+    - Indicate if changes were made
+    - You may not do so in any way that suggests the licensor endorses you
+
+  NonCommercial (NC):
+    - You may NOT use this software for commercial purposes
+    - You may NOT make money directly or indirectly from this project
+    - You may NOT use this in any revenue-generating product or service
+    - Commercial use requires explicit written permission from the author
+
+  ShareAlike (SA):
+    - If you remix, transform, or build upon the material, you must distribute
+      your contributions under the same CC BY-NC-SA 4.0 license
+    - This ensures the project remains free and open for non-commercial use
+    - Your improvements benefit the entire community
+
+Additional Restrictions:
+  - You may NOT remove or alter any copyright notices
+  - You may NOT sublicense or sell this software
+  - You may NOT claim this work as your own
+  - You may NOT use the author's name for endorsement without permission
+
+Disclaimer:
+  THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION
+  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+===============================================================================
+
+For commercial licensing or business inquiries, please contact:
+  - GitHub: https://github.com/likhitha-hs543
+  - Repository: https://github.com/likhitha-hs543/worker-stress-analysis
+
+This license is based on Creative Commons BY-NC-SA 4.0 International License.
+Full legal code: https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+
+===============================================================================
