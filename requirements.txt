@@ -1,13 +1,36 @@
+# Core Dependencies
 opencv-python==4.8.1.78
-tensorflow==2.20.0
-fer==22.5.1
-speechbrain==0.5.15
-sounddevice==0.4.6
 numpy==1.26.4
+scipy==1.11.4
+
+# Deep Learning Frameworks
+tensorflow==2.15.0
 torch==2.0.1
 torchaudio==2.0.2
+
+# Face Emotion Detection (Enhanced)
+deepface==0.0.79
+fer==22.5.1
+tf-keras==2.15.0
+retina-face==0.0.13
+
+# Speech/Audio Processing
+sounddevice==0.4.6
 librosa==0.10.1
-scipy==1.11.4
-matplotlib==3.7.2
+python-speech-features==0.6
+pyaudio==0.2.13
+
+# Web Framework
 flask==3.0.0
 flask-cors==4.0.0
+werkzeug==3.0.0
+
+# Data Processing & Visualization
+matplotlib==3.7.2
+pandas==2.1.4
+seaborn==0.13.0
+
+# Utilities
+pillow==10.1.0
+requests==2.31.0
+tqdm==4.66.1
