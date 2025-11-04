@@ -54,83 +54,171 @@ async function updateCurrentState() {
         
         console.log('Current state:', data); // Debug log
         
-        // Update face emotion (old display)
-        document.getElementById('faceEmotion').textContent = data.face_emotion;
-        document.getElementById('faceConfidence').textContent = data.face_confidence.toFixed(2);
+        // Update hero stats
+        updateHeroStats(data);
         
-        // Update speech emotion (old display)
-        document.getElementById('speechEmotion').textContent = data.speech_emotion;
-        document.getElementById('speechConfidence').textContent = data.speech_confidence.toFixed(2);
-        
-        // Update emotion classification cards (new display)
-        updateEmotionCard('face', data.face_emotion, data.face_confidence);
-        updateEmotionCard('speech', data.speech_emotion, data.speech_confidence);
+        // Update emotion displays
+        updateEmotionDisplay('face', data.face_emotion, data.face_confidence);
+        updateEmotionDisplay('speech', data.speech_emotion, data.speech_confidence);
         
         // Update stress level
         updateStressLevel(data.stress_level, data.stress_score);
+        updateStressGauge(data.stress_score, data.stress_level);
+        
+        // Update confidence rings
+        updateConfidenceRing('faceRing', data.face_confidence);
+        updateConfidenceRing('speechRing', data.speech_confidence);
         
     } catch (error) {
         console.error('Error updating current state:', error);
     }
 }
 
-// Update emotion classification cards
-function updateEmotionCard(type, emotion, confidence) {
-    const nameElement = document.getElementById(`${type}EmotionName`);
-    const barElement = document.getElementById(`${type}ConfidenceBar`);
-    const textElement = document.getElementById(`${type}ConfidenceText`);
+// Update hero statistics cards
+function updateHeroStats(data) {
+    // Stress level
+    const heroStressLevel = document.getElementById('heroStressLevel');
+    const heroStressScore = document.getElementById('heroStressScore');
+    if (heroStressLevel) heroStressLevel.textContent = data.stress_level;
+    if (heroStressScore) heroStressScore.textContent = data.stress_score.toFixed(2);
     
-    if (nameElement && barElement && textElement) {
-        // Update emotion name
-        nameElement.textContent = emotion;
-        nameElement.className = 'emotion-name ' + emotion;
-        
-        // Update confidence bar
-        const percentage = Math.round(confidence * 100);
-        barElement.style.width = percentage + '%';
-        barElement.className = 'emotion-confidence-fill ' + emotion;
-        
-        // Update confidence text
-        textElement.textContent = percentage + '%';
-        
-        // Update icon based on emotion
-        const card = document.querySelector(`.${type}-emotion-card`);
-        const icon = card.querySelector('.emotion-icon');
-        if (icon) {
-            const emotionIcons = {
-                'happy': '😊',
-                'sad': '😢',
-                'angry': '😠',
-                'fear': '😨',
-                'neutral': '😐',
-                'surprise': '😮',
-                'disgust': '🤢'
-            };
-            icon.textContent = emotionIcons[emotion] || '😐';
+    // Face emotion
+    const heroFaceEmotion = document.getElementById('heroFaceEmotion');
+    const heroFaceConfidence = document.getElementById('heroFaceConfidence');
+    if (heroFaceEmotion) heroFaceEmotion.textContent = data.face_emotion;
+    if (heroFaceConfidence) heroFaceConfidence.textContent = Math.round(data.face_confidence * 100) + '%';
+    
+    // Speech emotion
+    const heroSpeechEmotion = document.getElementById('heroSpeechEmotion');
+    const heroSpeechConfidence = document.getElementById('heroSpeechConfidence');
+    if (heroSpeechEmotion) heroSpeechEmotion.textContent = data.speech_emotion;
+    if (heroSpeechConfidence) heroSpeechConfidence.textContent = Math.round(data.speech_confidence * 100) + '%';
+}
+
+// Update emotion display cards
+function updateEmotionDisplay(type, emotion, confidence) {
+    const emotionIcons = {
+        'happy': '😊',
+        'sad': '😢',
+        'angry': '😠',
+        'fear': '😨',
+        'neutral': '😐',
+        'surprise': '😮',
+        'disgust': '🤢'
+    };
+    
+    // Update emoji
+    const emoji = document.getElementById(`${type}Emoji`);
+    if (emoji) emoji.textContent = emotionIcons[emotion] || '😐';
+    
+    // Update emotion name
+    const nameElement = document.getElementById(`${type}EmotionName`);
+    if (nameElement) {
+        nameElement.textContent = emotion.charAt(0).toUpperCase() + emotion.slice(1);
+    }
+    
+    // Update confidence bar
+    const fillElement = document.getElementById(`${type}ConfidenceFill`);
+    if (fillElement) {
+        fillElement.style.width = (confidence * 100) + '%';
+    }
+    
+    // Update confidence text
+    const textElement = document.getElementById(`${type}ConfidenceText`);
+    if (textElement) {
+        textElement.textContent = Math.round(confidence * 100) + '%';
+    }
+    
+    // Update emotion breakdown bars (simulated data)
+    updateEmotionBreakdown(emotion, confidence);
+}
+
+// Update emotion breakdown bars
+function updateEmotionBreakdown(dominantEmotion, dominantConfidence) {
+    const emotions = ['happy', 'neutral', 'sad', 'angry', 'fear'];
+    const distribution = {};
+    
+    // Simulate distribution based on dominant emotion
+    emotions.forEach(emotion => {
+        if (emotion === dominantEmotion) {
+            distribution[emotion] = dominantConfidence;
+        } else {
+            distribution[emotion] = (1 - dominantConfidence) / (emotions.length - 1);
+        }
+    });
+    
+    // Update bars
+    emotions.forEach(emotion => {
+        const item = document.querySelector(`.emotion-bar-item[data-emotion="${emotion}"]`);
+        if (item) {
+            const fill = item.querySelector('.emotion-bar-fill');
+            const percent = item.querySelector('.emotion-percent');
+            if (fill) fill.style.width = (distribution[emotion] * 100) + '%';
+            if (percent) percent.textContent = Math.round(distribution[emotion] * 100) + '%';
+        }
+    });
+}
+
+// Update confidence ring
+function updateConfidenceRing(ringId, confidence) {
+    const ring = document.getElementById(ringId);
+    if (ring) {
+        const circle = ring.querySelector('.circle');
+        if (circle) {
+            const percentage = confidence * 100;
+            circle.setAttribute('stroke-dasharray', `${percentage}, 100`);
         }
     }
 }
 
 // Update stress level display
 function updateStressLevel(level, score) {
-    const indicator = document.getElementById('stressIndicator');
+    // Update old elements (hidden but kept for compatibility)
     const levelText = document.getElementById('stressLevelText');
     const scoreText = document.getElementById('stressScore');
     const barFill = document.getElementById('stressBarFill');
     
-    // Update text
-    levelText.textContent = level;
-    scoreText.textContent = score.toFixed(3);
+    if (levelText) levelText.textContent = level;
+    if (scoreText) scoreText.textContent = score.toFixed(3);
+    if (barFill) barFill.style.width = (score * 100) + '%';
+}
+
+// Update stress gauge
+function updateStressGauge(score, level) {
+    const gaugeValue = document.getElementById('gaugeValue');
+    const gaugeLabel = document.getElementById('gaugeLabel');
+    const gaugeFill = document.getElementById('gaugeFill');
     
-    // Update stress bar
-    barFill.style.width = (score * 100) + '%';
+    if (gaugeValue) gaugeValue.textContent = score.toFixed(2);
+    if (gaugeLabel) gaugeLabel.textContent = level;
     
-    // Remove all stress classes
-    indicator.className = 'stress-indicator';
-    
-    // Add appropriate class based on level
-    const levelClass = level.toLowerCase().replace(' ', '-');
-    indicator.classList.add('stress-' + levelClass);
+    // Update gauge arc (SVG path)
+    if (gaugeFill) {
+        const percentage = score;
+        const angle = 180 * percentage; // 180 degrees = semicircle
+        const startX = 40;
+        const startY = 150;
+        const radius = 60;
+        
+        // Calculate end point
+        const endAngle = (angle - 180) * (Math.PI / 180);
+        const endX = 100 + radius * Math.cos(endAngle);
+        const endY = 100 + radius * Math.sin(endAngle);
+        
+        const largeArc = angle > 180 ? 1 : 0;
+        const path = `M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY}`;
+        
+        gaugeFill.setAttribute('d', path);
+        
+        // Update color based on stress level
+        let strokeColor = '#10b981'; // relaxed - green
+        if (score > 0.2) strokeColor = '#3b82f6'; // calm - blue
+        if (score > 0.4) strokeColor = '#f59e0b'; // mild - yellow
+        if (score > 0.6) strokeColor = '#f97316'; // moderate - orange
+        if (score > 0.8) strokeColor = '#ef4444'; // high - red
+        
+        gaugeFill.setAttribute('stroke', strokeColor);
+    }
 }
 
 // Fetch and update statistics
@@ -139,23 +227,27 @@ async function updateStatistics() {
         const response = await fetch('/api/statistics');
         const data = await response.json();
         
-        // Update statistics
-        document.getElementById('avgStress').textContent = 
-            (data.average_stress || 0).toFixed(3);
-        document.getElementById('trend').textContent = data.trend || 'stable';
-        document.getElementById('totalSamples').textContent = data.total_samples || 0;
-        document.getElementById('maxStress').textContent = 
-            (data.max_stress || 0).toFixed(3);
+        // Update statistics in quick stats cards
+        const avgStress = document.getElementById('avgStress');
+        const trend = document.getElementById('trend');
+        const maxStress = document.getElementById('maxStress');
+        const heroTotalSamples = document.getElementById('heroTotalSamples');
+        const heroMaxStress = document.getElementById('heroMaxStress');
         
-        // Update trend color
-        const trendElement = document.getElementById('trend');
-        trendElement.className = 'stat-value';
-        if (data.trend === 'increasing') {
-            trendElement.style.color = '#dc3545';
-        } else if (data.trend === 'decreasing') {
-            trendElement.style.color = '#28a745';
-        } else {
-            trendElement.style.color = '#fff';
+        if (avgStress) avgStress.textContent = (data.average_stress || 0).toFixed(2);
+        if (trend) {
+            trend.textContent = (data.trend || 'stable').charAt(0).toUpperCase() + (data.trend || 'stable').slice(1);
+        }
+        if (maxStress) maxStress.textContent = (data.max_stress || 0).toFixed(2);
+        if (heroTotalSamples) heroTotalSamples.textContent = data.total_samples || 0;
+        if (heroMaxStress) heroMaxStress.textContent = (data.max_stress || 0).toFixed(2);
+        
+        // Update trend indicator
+        const trendIndicator = document.getElementById('trendIndicator');
+        if (trendIndicator) {
+            const trendText = data.trend === 'increasing' ? 'Rising' : 
+                             data.trend === 'decreasing' ? 'Falling' : 'Stable';
+            trendIndicator.textContent = trendText;
         }
         
     } catch (error) {

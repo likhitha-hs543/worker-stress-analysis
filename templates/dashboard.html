@@ -3,179 +3,537 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Worker Stress Analysis Dashboard</title>
+    <title>MindFlow - Stress Analysis Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1>🧠 Worker Stress Analysis Dashboard</h1>
-            <div class="timestamp" id="currentTime"></div>
+    <!-- Background Effects -->
+    <div class="bg-gradient"></div>
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                </div>
+                <span class="logo-text">MindFlow</span>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active">
+                <i data-feather="activity"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-feather="bar-chart-2"></i>
+                <span>Analytics</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-feather="clock"></i>
+                <span>History</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-feather="settings"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <i data-feather="user"></i>
+                </div>
+                <div class="user-info">
+                    <div class="user-name">Admin User</div>
+                    <div class="user-status">
+                        <span class="status-dot"></span>
+                        Active Session
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <!-- Top Navigation Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" id="menuToggle">
+                    <i data-feather="menu"></i>
+                </button>
+                <div class="search-box">
+                    <i data-feather="search"></i>
+                    <input type="text" placeholder="Search anything...">
+                </div>
+            </div>
+            
+            <div class="topbar-right">
+                <div class="time-display" id="currentTime"></div>
+                <button class="notification-btn">
+                    <i data-feather="bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="fullscreen-btn" id="fullscreenBtn">
+                    <i data-feather="maximize"></i>
+                </button>
+            </div>
         </header>
 
-        <!-- Main Grid -->
-        <div class="dashboard-grid">
-            <!-- Video Feed Section -->
-            <div class="card video-section">
-                <h2>📹 Live Video Feed</h2>
-                <div class="video-container">
-                    <img src="{{ url_for('video_feed') }}" alt="Video Feed" class="video-feed">
-                </div>
-            </div>
-
-            <!-- Current Status Section -->
-            <div class="card status-section">
-                <h2>📊 Current Status</h2>
-                
-                <div class="status-item stress-level-display">
-                    <div class="stress-indicator" id="stressIndicator">
-                        <div class="stress-level-text" id="stressLevelText">CALM</div>
-                        <div class="stress-score" id="stressScore">0.00</div>
+        <!-- Main Dashboard Content -->
+        <div class="dashboard-container">
+            
+            <!-- Hero Stats Row -->
+            <div class="hero-stats">
+                <div class="hero-stat-card primary">
+                    <div class="stat-icon">
+                        <i data-feather="activity"></i>
                     </div>
-                </div>
-
-                <div class="status-grid">
-                    <div class="status-item">
-                        <div class="status-label">😊 Face Emotion</div>
-                        <div class="status-value" id="faceEmotion">neutral</div>
-                        <div class="status-confidence" id="faceConfidence">0.00</div>
-                    </div>
-
-                    <div class="status-item">
-                        <div class="status-label">🎤 Speech Emotion</div>
-                        <div class="status-value" id="speechEmotion">neutral</div>
-                        <div class="status-confidence" id="speechConfidence">0.00</div>
-                    </div>
-                </div>
-
-                <div class="stress-bar-container">
-                    <div class="stress-bar-label">Stress Level</div>
-                    <div class="stress-bar">
-                        <div class="stress-bar-fill" id="stressBarFill"></div>
-                    </div>
-                    <div class="stress-bar-markers">
-                        <span>Relaxed</span>
-                        <span>Calm</span>
-                        <span>Mild</span>
-                        <span>Moderate</span>
-                        <span>High</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Emotion Classification Section -->
-            <div class="card emotion-classification-section">
-                <h2>🎭 Emotion Classification</h2>
-                
-                <div class="emotion-cards">
-                    <div class="emotion-card face-emotion-card">
-                        <div class="emotion-icon">😊</div>
-                        <div class="emotion-title">Face Emotion</div>
-                        <div class="emotion-name" id="faceEmotionName">neutral</div>
-                        <div class="emotion-confidence-bar">
-                            <div class="emotion-confidence-fill" id="faceConfidenceBar"></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Current Stress Level</div>
+                        <div class="stat-value" id="heroStressLevel">CALM</div>
+                        <div class="stat-sublabel">
+                            <span id="heroStressScore">0.00</span> / 1.00
                         </div>
-                        <div class="emotion-confidence-text" id="faceConfidenceText">0%</div>
                     </div>
+                    <div class="stat-trend up">
+                        <i data-feather="trending-down"></i>
+                        <span id="trendIndicator">Stable</span>
+                    </div>
+                </div>
 
-                    <div class="emotion-card speech-emotion-card">
-                        <div class="emotion-icon">🎤</div>
-                        <div class="emotion-title">Speech Emotion</div>
-                        <div class="emotion-name" id="speechEmotionName">neutral</div>
-                        <div class="emotion-confidence-bar">
-                            <div class="emotion-confidence-fill" id="speechConfidenceBar"></div>
+                <div class="hero-stat-card">
+                    <div class="stat-icon emotion">
+                        <i data-feather="smile"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Face Emotion</div>
+                        <div class="stat-value emotion-value" id="heroFaceEmotion">neutral</div>
+                        <div class="stat-sublabel">
+                            Confidence: <span id="heroFaceConfidence">0%</span>
                         </div>
-                        <div class="emotion-confidence-text" id="speechConfidenceText">0%</div>
+                    </div>
+                    <div class="confidence-ring" id="faceRing">
+                        <svg viewBox="0 0 36 36">
+                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
                     </div>
                 </div>
 
-                <div class="emotion-legend">
-                    <div class="legend-item">
-                        <span class="legend-color happy"></span> Happy
+                <div class="hero-stat-card">
+                    <div class="stat-icon speech">
+                        <i data-feather="mic"></i>
                     </div>
-                    <div class="legend-item">
-                        <span class="legend-color neutral"></span> Neutral
+                    <div class="stat-content">
+                        <div class="stat-label">Speech Emotion</div>
+                        <div class="stat-value emotion-value" id="heroSpeechEmotion">neutral</div>
+                        <div class="stat-sublabel">
+                            Confidence: <span id="heroSpeechConfidence">0%</span>
+                        </div>
                     </div>
-                    <div class="legend-item">
-                        <span class="legend-color sad"></span> Sad
+                    <div class="confidence-ring" id="speechRing">
+                        <svg viewBox="0 0 36 36">
+                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
                     </div>
-                    <div class="legend-item">
-                        <span class="legend-color angry"></span> Angry
+                </div>
+
+                <div class="hero-stat-card">
+                    <div class="stat-icon samples">
+                        <i data-feather="database"></i>
                     </div>
-                    <div class="legend-item">
-                        <span class="legend-color fear"></span> Fear
+                    <div class="stat-content">
+                        <div class="stat-label">Total Readings</div>
+                        <div class="stat-value" id="heroTotalSamples">0</div>
+                        <div class="stat-sublabel">
+                            Max: <span id="heroMaxStress">0.00</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Statistics Section -->
-            <div class="card stats-section">
-                <h2>📈 Statistics</h2>
+            <!-- Main Grid Layout -->
+            <div class="dashboard-grid">
                 
-                <div class="stat-card">
-                    <div class="stat-label">Average Stress</div>
-                    <div class="stat-value" id="avgStress">0.00</div>
+                <!-- Video Feed - Large Card -->
+                <div class="glass-card video-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i data-feather="video"></i>
+                            <h3>Live Video Feed</h3>
+                        </div>
+                        <div class="card-actions">
+                            <button class="icon-btn">
+                                <i data-feather="maximize-2"></i>
+                            </button>
+                            <div class="recording-indicator">
+                                <span class="rec-dot"></span>
+                                REC
+                            </div>
+                        </div>
+                    </div>
+                    <div class="video-container">
+                        <img src="{{ url_for('video_feed') }}" alt="Video Feed" class="video-feed">
+                        <div class="video-overlay">
+                            <div class="video-stats">
+                                <div class="video-stat">
+                                    <i data-feather="eye"></i>
+                                    <span>Face Detected</span>
+                                </div>
+                                <div class="video-stat">
+                                    <i data-feather="zap"></i>
+                                    <span id="fpsCounter">30 FPS</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-label">Trend</div>
-                    <div class="stat-value" id="trend">stable</div>
+                <!-- Real-time Stress Gauge -->
+                <div class="glass-card stress-gauge-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i data-feather="target"></i>
+                            <h3>Stress Monitor</h3>
+                        </div>
+                    </div>
+                    <div class="stress-gauge-container">
+                        <div class="stress-gauge" id="stressGauge">
+                            <svg viewBox="0 0 200 200" class="gauge-svg">
+                                <!-- Background arc -->
+                                <path class="gauge-bg" d="M 40 150 A 60 60 0 1 1 160 150" fill="none" stroke-width="20"/>
+                                <!-- Stress level arc -->
+                                <path class="gauge-fill" id="gaugeFill" d="M 40 150 A 60 60 0 0 1 40 150" fill="none" stroke-width="20"/>
+                                <!-- Center circle -->
+                                <circle cx="100" cy="100" r="55" class="gauge-center"/>
+                                <!-- Text -->
+                                <text x="100" y="95" class="gauge-value" id="gaugeValue">0.00</text>
+                                <text x="100" y="115" class="gauge-label" id="gaugeLabel">CALM</text>
+                            </svg>
+                        </div>
+                        <div class="gauge-legend">
+                            <div class="gauge-marker relaxed">
+                                <span class="marker-dot"></span>
+                                <span>Relaxed</span>
+                            </div>
+                            <div class="gauge-marker calm">
+                                <span class="marker-dot"></span>
+                                <span>Calm</span>
+                            </div>
+                            <div class="gauge-marker mild">
+                                <span class="marker-dot"></span>
+                                <span>Mild</span>
+                            </div>
+                            <div class="gauge-marker moderate">
+                                <span class="marker-dot"></span>
+                                <span>Moderate</span>
+                            </div>
+                            <div class="gauge-marker high">
+                                <span class="marker-dot"></span>
+                                <span>High</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-label">Total Samples</div>
-                    <div class="stat-value" id="totalSamples">0</div>
+                <!-- Emotion Analysis Cards -->
+                <div class="glass-card emotion-analysis-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i data-feather="smile"></i>
+                            <h3>Emotion Analysis</h3>
+                        </div>
+                        <div class="emotion-toggle">
+                            <button class="toggle-btn active" data-type="face">Face</button>
+                            <button class="toggle-btn" data-type="speech">Speech</button>
+                        </div>
+                    </div>
+                    
+                    <div class="emotion-display" id="faceEmotionDisplay">
+                        <div class="emotion-visual">
+                            <div class="emotion-emoji" id="faceEmoji">😐</div>
+                            <div class="emotion-name-large" id="faceEmotionName">Neutral</div>
+                            <div class="emotion-confidence-display">
+                                <div class="confidence-label">Confidence Level</div>
+                                <div class="confidence-progress">
+                                    <div class="confidence-bar" id="faceConfidenceBar">
+                                        <div class="confidence-fill" id="faceConfidenceFill"></div>
+                                    </div>
+                                    <div class="confidence-percent" id="faceConfidenceText">0%</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="emotion-breakdown">
+                            <div class="breakdown-title">Emotion Breakdown</div>
+                            <div class="emotion-bar-item" data-emotion="happy">
+                                <span class="emotion-label">😊 Happy</span>
+                                <div class="emotion-bar">
+                                    <div class="emotion-bar-fill"></div>
+                                </div>
+                                <span class="emotion-percent">0%</span>
+                            </div>
+                            <div class="emotion-bar-item" data-emotion="neutral">
+                                <span class="emotion-label">😐 Neutral</span>
+                                <div class="emotion-bar">
+                                    <div class="emotion-bar-fill"></div>
+                                </div>
+                                <span class="emotion-percent">0%</span>
+                            </div>
+                            <div class="emotion-bar-item" data-emotion="sad">
+                                <span class="emotion-label">😢 Sad</span>
+                                <div class="emotion-bar">
+                                    <div class="emotion-bar-fill"></div>
+                                </div>
+                                <span class="emotion-percent">0%</span>
+                            </div>
+                            <div class="emotion-bar-item" data-emotion="angry">
+                                <span class="emotion-label">😠 Angry</span>
+                                <div class="emotion-bar">
+                                    <div class="emotion-bar-fill"></div>
+                                </div>
+                                <span class="emotion-percent">0%</span>
+                            </div>
+                            <div class="emotion-bar-item" data-emotion="fear">
+                                <span class="emotion-label">😨 Fear</span>
+                                <div class="emotion-bar">
+                                    <div class="emotion-bar-fill"></div>
+                                </div>
+                                <span class="emotion-percent">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="emotion-display hidden" id="speechEmotionDisplay">
+                        <div class="emotion-visual">
+                            <div class="emotion-emoji" id="speechEmoji">😐</div>
+                            <div class="emotion-name-large" id="speechEmotionName">Neutral</div>
+                            <div class="emotion-confidence-display">
+                                <div class="confidence-label">Confidence Level</div>
+                                <div class="confidence-progress">
+                                    <div class="confidence-bar" id="speechConfidenceBar">
+                                        <div class="confidence-fill" id="speechConfidenceFill"></div>
+                                    </div>
+                                    <div class="confidence-percent" id="speechConfidenceText">0%</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="audio-visualizer">
+                            <div class="viz-bar"></div>
+                            <div class="viz-bar"></div>
+                            <div class="viz-bar"></div>
+                            <div class="viz-bar"></div>
+                            <div class="viz-bar"></div>
+                            <div class="viz-bar"></div>
+                            <div class="viz-bar"></div>
+                            <div class="viz-bar"></div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-label">Max Stress</div>
-                    <div class="stat-value" id="maxStress">0.00</div>
+                <!-- Stress Trend Chart -->
+                <div class="glass-card chart-card span-2">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i data-feather="trending-up"></i>
+                            <h3>Stress Timeline</h3>
+                        </div>
+                        <div class="chart-controls">
+                            <button class="chart-btn active" data-range="1h">1H</button>
+                            <button class="chart-btn" data-range="3h">3H</button>
+                            <button class="chart-btn" data-range="6h">6H</button>
+                            <button class="chart-btn" data-range="24h">24H</button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="stressChart"></canvas>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Charts Section -->
-            <div class="card chart-section">
-                <h2>📉 Stress History</h2>
-                <div class="chart-container">
-                    <canvas id="stressChart"></canvas>
+                <!-- Emotion Distribution -->
+                <div class="glass-card chart-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i data-feather="pie-chart"></i>
+                            <h3>Emotion Distribution</h3>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper donut">
+                        <canvas id="emotionChart"></canvas>
+                    </div>
+                    <div class="chart-legend-custom" id="emotionLegend"></div>
                 </div>
-            </div>
 
-            <div class="card chart-section">
-                <h2>🎭 Face Emotion Distribution</h2>
-                <div class="chart-container">
-                    <canvas id="emotionChart"></canvas>
+                <!-- Quick Stats -->
+                <div class="glass-card stats-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i data-feather="bar-chart"></i>
+                            <h3>Session Statistics</h3>
+                        </div>
+                    </div>
+                    <div class="quick-stats">
+                        <div class="quick-stat-item">
+                            <div class="stat-icon-small blue">
+                                <i data-feather="trending-down"></i>
+                            </div>
+                            <div class="stat-details">
+                                <div class="stat-value-small" id="avgStress">0.00</div>
+                                <div class="stat-label-small">Average Stress</div>
+                            </div>
+                        </div>
+                        <div class="quick-stat-item">
+                            <div class="stat-icon-small green">
+                                <i data-feather="activity"></i>
+                            </div>
+                            <div class="stat-details">
+                                <div class="stat-value-small" id="trend">Stable</div>
+                                <div class="stat-label-small">Trend Pattern</div>
+                            </div>
+                        </div>
+                        <div class="quick-stat-item">
+                            <div class="stat-icon-small purple">
+                                <i data-feather="alert-circle"></i>
+                            </div>
+                            <div class="stat-details">
+                                <div class="stat-value-small" id="maxStress">0.00</div>
+                                <div class="stat-label-small">Peak Stress</div>
+                            </div>
+                        </div>
+                        <div class="quick-stat-item">
+                            <div class="stat-icon-small orange">
+                                <i data-feather="clock"></i>
+                            </div>
+                            <div class="stat-details">
+                                <div class="stat-value-small" id="sessionDuration">00:00</div>
+                                <div class="stat-label-small">Session Time</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="chart-info">
-                    Shows distribution of detected face emotions over the last hour
-                </div>
-            </div>
 
-            <!-- History Table -->
-            <div class="card history-section">
-                <h2>📋 Recent History</h2>
-                <div class="table-container">
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th>Time</th>
-                                <th>Stress Level</th>
-                                <th>Score</th>
-                                <th>Face</th>
-                                <th>Speech</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTableBody">
-                            <!-- History rows will be inserted here -->
-                        </tbody>
-                    </table>
+                <!-- Recent Activity Timeline -->
+                <div class="glass-card timeline-card span-2">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i data-feather="list"></i>
+                            <h3>Recent Activity</h3>
+                        </div>
+                        <button class="icon-btn">
+                            <i data-feather="refresh-cw"></i>
+                        </button>
+                    </div>
+                    <div class="timeline-container">
+                        <div class="table-wrapper">
+                            <table class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                        <th>Stress Score</th>
+                                        <th>Face</th>
+                                        <th>Speech</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody">
+                                    <!-- Populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
 
+    <!-- Hidden elements for backward compatibility -->
+    <div style="display: none;">
+        <div id="faceEmotion"></div>
+        <div id="faceConfidence"></div>
+        <div id="speechEmotion"></div>
+        <div id="speechConfidence"></div>
+        <div id="stressIndicator">
+            <div id="stressLevelText"></div>
+            <div id="stressScore"></div>
+        </div>
+        <div id="stressBarFill"></div>
+        <div id="totalSamples"></div>
+    </div>
+
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script>
+        // Initialize Feather Icons
+        feather.replace();
+        
+        // Menu toggle
+        document.getElementById('menuToggle')?.addEventListener('click', function() {
+            document.querySelector('.sidebar')?.classList.toggle('collapsed');
+        });
+        
+        // Fullscreen toggle
+        document.getElementById('fullscreenBtn')?.addEventListener('click', function() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                this.querySelector('i').setAttribute('data-feather', 'minimize');
+            } else {
+                document.exitFullscreen();
+                this.querySelector('i').setAttribute('data-feather', 'maximize');
+            }
+            feather.replace();
+        });
+
+        // Emotion type toggle
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const type = this.getAttribute('data-type');
+                document.querySelectorAll('.emotion-display').forEach(d => d.classList.add('hidden'));
+                document.getElementById(type + 'EmotionDisplay')?.classList.remove('hidden');
+            });
+        });
+
+        // Audio visualizer animation
+        setInterval(() => {
+            document.querySelectorAll('.viz-bar').forEach(bar => {
+                const height = Math.random() * 100;
+                bar.style.height = height + '%';
+            });
+        }, 100);
+
+        // Session duration counter
+        let sessionStartTime = Date.now();
+        setInterval(() => {
+            const elapsed = Date.now() - sessionStartTime;
+            const minutes = Math.floor(elapsed / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            const durationEl = document.getElementById('sessionDuration');
+            if (durationEl) {
+                durationEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }, 1000);
+    </script>
 </body>
 </html>
